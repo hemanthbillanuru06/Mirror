@@ -26,21 +26,31 @@ export default function MapContainer({ className = '' }: MapContainerProps) {
 
     if (!mapContainer.current || mapRef.current) return;
 
+    let timeoutId: NodeJS.Timeout | null = null;
+
     try {
       mapboxgl.accessToken = token;
 
       const map = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/dark-v11',
+        style: 'mapbox://styles/mapbox/streets-v12',
         center: [78.4867, 17.3850],
-        pitch: 60,
-        bearing: -17,
-        zoom: 15.2,
+        pitch: 45,
+        bearing: 0,
+        zoom: 14,
       });
 
       mapRef.current = map;
 
+      // Timeout to catch stuck loading
+      timeoutId = setTimeout(() => {
+        console.log('Map load timeout triggered');
+        setError('Map loading timeout - token may be invalid or network blocked');
+        setLoading(false);
+      }, 10000);
+
       map.on('load', () => {
+        if (timeoutId) clearTimeout(timeoutId);
         setLoading(false);
         
         try {
@@ -222,7 +232,9 @@ export default function MapContainer({ className = '' }: MapContainerProps) {
       });
 
       map.on('error', (e) => {
-        setError('Map failed to load');
+        console.error('Mapbox error details:', e);
+        const errorMsg = e.error?.message || e.message || 'Unknown error';
+        setError(`Map error: ${errorMsg}`);
         setLoading(false);
       });
 
@@ -232,6 +244,7 @@ export default function MapContainer({ className = '' }: MapContainerProps) {
     }
 
     return () => {
+      if (timeoutId) clearTimeout(timeoutId);
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
