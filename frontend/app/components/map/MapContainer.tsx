@@ -12,13 +12,14 @@ export default function MapContainer({ className = '' }: MapContainerProps) {
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tokenDebug, setTokenDebug] = useState<string>('Checking...');
 
   useEffect(() => {
     const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+    setTokenDebug(token ? `Token: ${token.substring(0, 10)}... (length: ${token.length})` : 'NO TOKEN FOUND');
     
-    // Set error state immediately for visibility
     if (!token) {
-      setError('Token missing - check .env.local file');
+      setError('Mapbox token is missing. Please add NEXT_PUBLIC_MAPBOX_TOKEN to .env.local');
       setLoading(false);
       return;
     }
@@ -238,9 +239,9 @@ export default function MapContainer({ className = '' }: MapContainerProps) {
     };
   }, []);
 
-  // Debug: Show token status
+  // Direct check without useEffect
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-  const tokenStatus = token ? `Token present (${token.length} chars)` : 'Token missing';
+  const directTokenDebug = token ? `TOKEN: ${token.substring(0, 8)}... (len: ${token.length})` : 'NO TOKEN';
 
   if (error) {
     return (
@@ -248,7 +249,7 @@ export default function MapContainer({ className = '' }: MapContainerProps) {
         <div className="text-center p-6">
           <div className="text-[#C53030] text-sm mb-2">Map Error</div>
           <div className="text-[#8B949E] text-xs">{error}</div>
-          <div className="text-[#8B949E] text-xs mt-2">{tokenStatus}</div>
+          <div className="text-[#D97706] text-xs mt-2">{directTokenDebug}</div>
         </div>
       </div>
     );
@@ -258,7 +259,7 @@ export default function MapContainer({ className = '' }: MapContainerProps) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-[#161B22]">
         <div className="text-[#8B949E] text-sm mb-2">Loading map...</div>
-        <div className="text-[#8B949E] text-xs">{tokenStatus}</div>
+        <div className="text-[#D97706] text-xs">{directTokenDebug}</div>
       </div>
     );
   }
